@@ -1,47 +1,33 @@
-// // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
 
-// contract MultiWill {
-//     struct Will {
-//         address recipient;
-//         uint256 amount;
-//         bool claimed;
-//     }
+// 1. Import the Flare Contract Registry
+import {ContractRegistry} from "flare-periphery-contracts-fassets-test/coston2/ContractRegistry.sol";
 
-//     mapping(address => Will[]) public wills; // Each owner can have multiple wills
+// 2. Import the AssetManager interface
+import {IAssetManager} from "flare-periphery-contracts-fassets-test/coston2/IAssetManager.sol";
 
-//     function createWill(address _recipient) public payable {
-//         require(_recipient != address(0), "Invalid recipient address");
-//         require(msg.value > 0, "Amount must be greater than zero");
+// 3. Contract for accessing FAssets settings from the asset manager
+contract FAssetsSettings {
+    // 4. This function gets two important numbers from the asset manager settings:
+    // * lotSizeAMG: The smallest amount you can trade (in AMG units)
+    // * assetDecimals: How many decimal places the asset uses
+    // FAssets Operation Parameters https://dev.flare.network/fassets/operational-parameters
+    function getLotSize()
+        public
+        view
+        returns (uint64 lotSizeAMG, uint8 assetDecimals)
+    {
+        // 5. Get the AssetManager contract from the Flare Contract Registry
+        IAssetManager assetManager = ContractRegistry.getAssetManagerFXRP();
 
-//         wills[msg.sender].push(Will({
-//             recipient: _recipient,
-//             amount: msg.value,
-//             claimed: false
-//         }));
-//     }
+        // 6. Get the lot size and asset decimals from the AssetManager contract
+        lotSizeAMG = assetManager.getSettings().lotSizeAMG;
+        assetDecimals = assetManager.getSettings().assetDecimals;
 
-//     function claimWill(address _owner, uint256 _index) public {
-//         require(_index < wills[_owner].length, "Invalid will index");
-
-//         Will storage userWill = wills[_owner][_index];
-//         require(msg.sender == userWill.recipient, "Only recipient can claim");
-//         require(!userWill.claimed, "Already claimed");
-//         require(userWill.amount > 0, "No funds to claim");
-
-//         userWill.claimed = true;
-//         payable(userWill.recipient).transfer(userWill.amount);
-//     }
-
-//     function getMyWillsCount() public view returns (uint256) {
-//         return wills[msg.sender].length;
-//     }
-
-//     function getWill(address _owner, uint256 _index) public view returns (address recipient, uint256 amount, bool claimed) {
-//         require(_index < wills[_owner].length, "Invalid will index");
-//         Will memory userWill = wills[_owner][_index];
-//         return (userWill.recipient, userWill.amount, userWill.claimed);
-//     }
+        return (lotSizeAMG, assetDecimals);
+    }
+}
 
 //     function getContractBalance() public view returns (uint256) {
 //         return address(this).balance;
